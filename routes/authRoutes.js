@@ -19,26 +19,34 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ msg: 'El email ya está registrado' });
         }
 
-        // 2. Crear una nueva instancia (el .pre('save') en el modelo hashea la password)
-        user = new User({ email, password, username });
+        // 2. HASHEAR LA CONTRASEÑA AQUÍ (CÓDIGO NUEVO Y CRÍTICO)
+        const salt = await bcrypt.genSalt(10); 
+        const hashedPassword = await bcrypt.hash(password, salt);
+        
+        // 3. Crear una nueva instancia con la contraseña YA HASHEADA
+        user = new User({ 
+            email, 
+            password: hashedPassword, // <-- USAMOS EL HASH
+            username 
+        });
 
         await user.save(); // Guarda el usuario hasheado en MongoDB
 
-        // 3. Opcional: Generar token inmediatamente después del registro para iniciar sesión
+        // 4. Generar token y responder (sin cambios)
         const payload = { user: { id: user.id } };
 
         jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }, // El token expira en 1 hora
+            { expiresIn: '1h' },
             (err, token) => {
                 if (err) throw err;
-                res.status(201).json({ token, userId: user.id }); // Envía el token al Front-End
+                res.status(201).json({ token, userId: user.id }); 
             }
         );
 
     } catch (error) {
-        console.error(error.message);
+        console.error("Error en /register:", error.message);
         res.status(500).send('Error del servidor al registrar');
     }
 });
