@@ -2,31 +2,31 @@
 
 const jwt = require('jsonwebtoken');
 
-// Exportamos la función middleware que toma req, res, y next
 module.exports = function (req, res, next) {
-    // 1. Obtener el token del encabezado de la petición
-    // En el Front-End, se enviará: Headers: {'x-auth-token': 'el_token_aqui'}
+    // 1. Obtener el token del encabezado (Header)
+    // El Front-End lo envía como 'x-auth-token'
     const token = req.header('x-auth-token'); 
 
-    // 2. Verificar si NO hay token
+    // 2. Verificar si el token existe
     if (!token) {
-        // Código 401: No autorizado (Unauthorized). El usuario no ha iniciado sesión.
-        return res.status(401).json({ msg: 'Acceso denegado. No se proporcionó un token.' });
+        // 401 Unauthorized: El usuario no tiene permiso (no hay token)
+        return res.status(401).json({ msg: 'No hay token, autorización denegada' });
     }
 
     // 3. Verificar el token
     try {
-        // Verifica el token usando la clave secreta del .env
+        // jwt.verify(token, secreto, callback)
         const decoded = jwt.verify(token, process.env.JWT_SECRET); 
         
-        // El token es válido. Extraemos el ID del usuario del payload decodificado.
-        req.userId = decoded.user.id; 
+        // 4. Adjuntar el ID del usuario decodificado a la petición (req)
+        // Esto permite que la ruta de lista sepa qué usuario está haciendo la solicitud.
+        req.user = decoded.user;
         
-        // Continuar con la siguiente función (la ruta final, ej: crear una lista)
+        // 5. Continuar con la ruta original
         next();
 
     } catch (err) {
-        // Si el token es inválido o ha expirado
-        res.status(401).json({ msg: 'Token no válido o expirado.' });
+        // Si el token no es válido o ha expirado
+        res.status(401).json({ msg: 'Token no es válido' });
     }
 };
