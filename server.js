@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./routes/authRoutes')); 
 
 // Rutas CRUD de Listas
-app.use('/api/list', require('./routes/listRoutes'));
+//app.use('/api/list', require('./routes/listRoutes'));
 
 
 // 6. Conectar la DB e Iniciar el Servidor
